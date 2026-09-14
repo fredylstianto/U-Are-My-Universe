@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+        />
+        <meta
+            name="description"
+            content="A love story written in starlight — made only for you."
+        />
+        <meta name="theme-color" content="#030008" />
+        <title>Niki. — you are my favorite universe</title>
+
+        <!-- Preconnect -->
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+
+        <!-- Stylesheets -->
+        <link rel="stylesheet" href="css/style.css" />
+        <link rel="stylesheet" href="css/effects.css" />
+
+        <style>
+            /* Critical above-fold paint */
+            html {
+                background: #030008;
+            }
+            /* Prevent any flash of hero/main content before unlock and preloader complete */
+            body:not(.loaded) main,
+            body:not(.loaded) .nav,
+            body:not(.loaded) .nav-dots,
+            body:not(.loaded) .scroll-progress,
+            body:not(.loaded) .audio-btn {
+                opacity: 0 !important;
+                visibility: hidden !important;
+                pointer-events: none !important;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- ─── CURSOR ──────────────────────────────────────────── -->
+        <div class="cursor" aria-hidden="true"></div>
+        <div class="cursor-follower" aria-hidden="true"></div>
+
+        <!-- ─── FIXED LAYERS ────────────────────────────────────── -->
+        <canvas id="galaxy-canvas" aria-hidden="true"></canvas>
+        <canvas id="three-canvas" aria-hidden="true"></canvas>
+        <canvas id="particle-canvas" aria-hidden="true"></canvas>
+        <div class="grain-overlay" aria-hidden="true"></div>
+        <div class="noise-overlay" aria-hidden="true"></div>
+        <div class="scroll-progress" aria-hidden="true"></div>
+        <!-- ─── PASSCODE SCREEN ─────────────────────────────────── -->
+        <div
+            id="passcode-screen"
+            class="passcode-screen"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Enter Secret Code"
+        >
+            <div class="passcode__backdrop"></div>
+            <div class="passcode__orbs" aria-hidden="true">
+                <div class="passcode__orb passcode__orb--1"></div>
+                <div class="passcode__orb passcode__orb--2"></div>
+            </div>
+
+            <div class="passcode__container">
+                <div class="passcode__card glass-card">
+                    <!-- Glowing badge with checkmark icon -->
+                    <div class="passcode__badge" aria-hidden="true">
+                        <svg
+                            class="passcode__badge-icon"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        >
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+
+                    <div class="passcode__accent-line" aria-hidden="true"></div>
+
+                    <p class="passcode__eyebrow t-label">
+                        FOR YOUR EYES ONLY,<br />LITERALLY
+                    </p>
+
+                    <h2 class="passcode__title">Enter Your Secret Code</h2>
+
+                    <p class="passcode__desc">
+                        Something's been waiting right past the surface, just for you.
+                    </p>
+
+                    <!-- 4 Passcode Digits -->
+                    <form class="passcode__form" autocomplete="off" onsubmit="return false;">
+                        <div class="passcode__inputs" role="group" aria-label="4 digit passcode">
+                            <input
+                                type="password"
+                                maxlength="1"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                class="passcode__input"
+                                data-index="0"
+                                autofocus
+                                aria-label="Digit 1"
+                            />
+                            <input
+                                type="password"
+                                maxlength="1"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                class="passcode__input"
+                                data-index="1"
+                                aria-label="Digit 2"
+                            />
+                            <input
+                                type="password"
+                                maxlength="1"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                class="passcode__input"
+                                data-index="2"
+                                aria-label="Digit 3"
+                            />
+                            <input
+                                type="password"
+                                maxlength="1"
+                                inputmode="numeric"
+                                pattern="[0-9]*"
+                                class="passcode__input"
+                                data-index="3"
+                                aria-label="Digit 4"
+                            />
+                        </div>
+
+                        <div class="passcode__feedback" aria-live="polite"></div>
+
+                        <button
+                            type="submit"
+                            class="passcode__btn btn"
+                            data-magnetic
+                            id="passcode-unlock-btn"
+                        >
+                            <span>Unlock it</span>
+                            <svg
+                                class="passcode__btn-arrow"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="2"
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                            >
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── PRELOADER ───────────────────────────────────────── -->
+        <div id="preloader" role="progressbar" aria-label="Loading experience">
+            <div class="preloader__bg"></div>
+            <div class="preloader__rings">
+                <div class="preloader__ring-outer"></div>
+                <div class="preloader__ring-mid"></div>
+            </div>
+
+            <div class="preloader__content">
+                <span class="preloader__heart">♡</span>
+                <div class="preloader__ring" aria-hidden="true"></div>
+                <p class="preloader__quote"></p>
+                <div>
+                    <div class="preloader__bar">
+                        <div class="preloader__bar-fill"></div>
+                    </div>
+                    <span class="preloader__percent">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ─── NAVIGATION ──────────────────────────────────────── -->
+        <nav class="nav" aria-label="Main navigation">
+            <a href="#hero" class="nav__logo">Niki.</a>
+            <ul class="nav__links" role="list">
+                <li><a href="#timeline" class="hover-line">Story</a></li>
+                <li><a href="#gallery" class="hover-line">Gallery</a></li>
+                <li><a href="#love-letter" class="hover-line">Letter</a></li>
+                <li><a href="#finale" class="hover-line">Ending</a></li>
+            </ul>
+        </nav>
+
+        <!-- ─── NAV DOTS ─────────────────────────────────────────── -->
+        <nav class="nav-dots" aria-label="Section navigation"></nav>
+
+        <!-- ─── AUDIO PLAYER (injected by audio-system.js) ──────── -->
+
+        <!-- ════════════════════════════════════════════════════════
+       MAIN EXPERIENCE
+       ════════════════════════════════════════════════════════ -->
+        <main>
+            <!-- ─── HERO ──────────────────────────────────────────── -->
+            <section class="hero" id="hero" data-scene="hero">
+                <div class="hero__particles" aria-hidden="true"></div>
+
+                <div class="hero__inner">
+                    <div class="hero__badge">
+                        <span>A love story, rendered in starlight</span>
+                    </div>
+
+                    <h1 class="hero__headline t-hero glow-text">
+                        <span class="line">You are my</span>
+                        <span class="line"><em>favorite</em> universe.</span>
+                    </h1>
+
+                    <p class="hero__sub">
+                        Every star was placed to eventually lead me here. Every
+                        wrong path — a quiet rehearsal for finding you.
+                    </p>
+
+                    <div class="hero__cta">
+                        <a
+                            href="#timeline"
+                            class="btn btn-primary"
+                            data-magnetic
+                        >
+                            Enter the Story
+                        </a>
+                        <a
+                            href="#love-letter"
+                            class="btn btn-ghost"
+                            data-magnetic
+                        >
+                            Read the Letter
+                        </a>
+                    </div>
+                </div>
+
+                <div class="hero__scroll-hint" aria-hidden="true">
+                    <span>scroll</span>
+                    <div class="hero__scroll-arrow"></div>
+                </div>
+
+                <!-- Decorative orbs -->
+                <div
+                    class="orb-decoration orb-violet"
+                    style="
+                        width: 600px;
+                        height: 600px;
+                        top: -20%;
+                        right: -15%;
+                        opacity: 0.5;
+                    "
+                ></div>
+                <div
+                    class="orb-decoration orb-pink"
+                    style="
+                        width: 400px;
+                        height: 400px;
+                        bottom: -10%;
+                        left: -8%;
+                        opacity: 0.4;
+                    "
+                ></div>
+            </section>
+
+            <!-- ─── TIMELINE ──────────────────────────────────────── -->
+            <section class="timeline" id="timeline" data-scene="timeline">
+                <div class="section-number" aria-hidden="true">01</div>
+                <div class="container">
+                    <header class="section-header">
+                        <p
+                            class="t-label section-header__eyebrow"
+                            data-reveal="fade-up"
+                        >
+                            How it all began
+                        </p>
+                        <div class="section-divider"></div>
+                        <h2
+                            class="t-section-title section-header__title"
+                            data-reveal="fade-up"
+                        >
+                            The Story So Far
+                        </h2>
+                        <p
+                            class="section-header__desc t-body"
+                            data-reveal="fade-up"
+                        >
+                            Some love stories don't have a clean beginning. Ours
+                            started as a quiet coincidence — and slowly became
+                            the most deliberate thing I have ever chosen.
+                        </p>
+                    </header>
+
+                    <div class="timeline__inner">
+                        <div
+                            class="timeline__glow-line"
+                            aria-hidden="true"
+                        ></div>
+                        <div class="timeline__items"></div>
+                        <!-- Items injected by JS -->
+                    </div>
+                </div>
+
+                <div
+                    class="orb-decoration orb-blue"
+                    style="
+                        width: 500px;
+                        height: 500px;
+                        top: 30%;
+                        left: -10%;
+                        opacity: 0.3;
+                    "
+                ></div>
+            </section>
+
+            <!-- ─── GALLERY ───────────────────────────────────────── -->
+            <section class="gallery" id="gallery" data-scene="gallery">
+                <div class="section-number" aria-hidden="true">02</div>
+                <div class="container">
+                    <header class="section-header">
+                        <p
+                            class="t-label section-header__eyebrow"
+                            data-reveal="fade-up"
+                        >
+                            The whole universe, in one person
+                        </p>
+                        <div class="section-divider"></div>
+                        <h2
+                            class="t-section-title section-header__title"
+                            data-reveal="fade-up"
+                        >
+                            Every frame is yours
+                        </h2>
+                        <p
+                            class="section-header__desc t-body"
+                            data-reveal="fade-up"
+                        >
+                            I keep every single one. The quiet ones. The
+                            unplanned ones. Especially the ones where you didn't
+                            know I was already in awe of you.
+                        </p>
+                    </header>
+
+                    <div class="gallery__grid" role="list">
+                        <!-- ─── FOTO 1 ── ganti src dengan path foto kamu ── -->
+                        <div class="gallery__card" data-reveal="fade-up">
+                            <div class="gallery__card-inner">
+                                <img
+                                    class="gallery__photo"
+                                    src="assets/images/img1.jpeg"
+                                    alt="foto 1"
+                                    loading="lazy"
+                                />
+                                <div class="gallery__caption">
+                                    <span class="gallery__caption-text"
+                                        >Glowing without even trying — and
+                                        that's the most breathtaking thing about
+                                        you.</span
+                                    >
+                                    <span class="gallery__caption-tag"
+                                        >#effortless</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ─── FOTO 2 ── -->
+                        <div class="gallery__card" data-reveal="fade-up">
+                            <div class="gallery__card-inner">
+                                <img
+                                    class="gallery__photo"
+                                    src="assets/images/img2.jpeg"
+                                    alt="foto 2"
+                                    loading="lazy"
+                                />
+                                <div class="gallery__caption">
+                                    <span class="gallery__caption-text"
+                                        >The kind of beauty that doesn't ask for
+                                        permission to take your breath
+                                        away.</span
+                                    >
+                                    <span class="gallery__caption-tag"
+                                        >#undeniable</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ─── FOTO 3 ── -->
+                        <div class="gallery__card" data-reveal="fade-up">
+                            <div class="gallery__card-inner">
+                                <img
+                                    class="gallery__photo"
+                                    src="assets/images/img3.jpeg"
+                                    alt="foto 3"
+                                    loading="lazy"
+                                />
+                                <div class="gallery__caption">
+                                    <span class="gallery__caption-text"
+                                        >That laughter — the one sound that
+                                        makes every quiet room feel alive.</span
+                                    >
+                                    <span class="gallery__caption-tag"
+                                        >#everything</span
+                                    >
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div
+                        style="
+                            text-align: center;
+                            margin-top: clamp(40px, 6vw, 72px);
+                        "
+                    >
+                        <p
+                            class="t-quote"
+                            data-reveal="scale"
+                            style="
+                                max-width: 600px;
+                                margin: 0 auto;
+                                color: var(--clr-white-40);
+                            "
+                        >
+                            "Not just a photograph. The reason I take them."
+                        </p>
+                    </div>
+                </div>
+
+                <div
+                    class="orb-decoration orb-pink"
+                    style="
+                        width: 600px;
+                        height: 600px;
+                        bottom: -10%;
+                        right: -10%;
+                        opacity: 0.35;
+                    "
+                ></div>
+            </section>
+
+            <!-- ─── LOVE LETTER ───────────────────────────────────── -->
+            <section
+                class="love-letter"
+                id="love-letter"
+                data-scene="love-letter"
+            >
+                <div class="section-number" aria-hidden="true">03</div>
+                <div class="letter__spotlight" aria-hidden="true"></div>
+
+                <div class="love-letter__inner">
+                    <header class="section-header">
+                        <p
+                            class="t-label section-header__eyebrow"
+                            data-reveal="fade-up"
+                        >
+                            Written at 2am, meant for always
+                        </p>
+                        <div class="section-divider"></div>
+                        <h2
+                            class="t-section-title section-header__title"
+                            data-reveal="fade-up"
+                        >
+                            Things I carry in silence
+                        </h2>
+                    </header>
+
+                    <div class="love-letter__paper glass-card">
+                        <span class="letter__salutation">To you, always —</span>
+
+                        <div class="letter__body">
+                            <p>
+                                I want you to know that I noticed you before you
+                                ever noticed me. I watched you exist in a room
+                                once and felt something shift —
+                                <strong
+                                    >oh, so this is what it feels like.</strong
+                                >
+                                Like recognizing something you have spent your
+                                whole life almost knowing.
+                            </p>
+
+                            <p>
+                                You find beauty in things other people walk
+                                past. You make space for people without ever
+                                making noise about it. You are tender in the
+                                exact places the world usually makes people
+                                hard. That is <strong>rare</strong>. That is not
+                                a small thing.
+                            </p>
+
+                            <p>
+                                There are nights I want to return to the very
+                                first time we spoke — just to feel that single
+                                second again. The one where something settled
+                                inside me, and some quiet part of me already
+                                knew:
+                                <strong>this is going to be everything.</strong>
+                            </p>
+
+                            <p>
+                                I don't know how to measure what this is. But I
+                                know it is the most honest thing I have ever
+                                built. And I would build it again — every time,
+                                in every life, in every universe.
+                                <strong
+                                    >Always, inevitably, back to you.</strong
+                                >
+                            </p>
+                        </div>
+
+                        <span class="letter__sign">— yours, completely.</span>
+                    </div>
+                </div>
+
+                <div
+                    class="orb-decoration orb-violet"
+                    style="
+                        width: 700px;
+                        height: 700px;
+                        top: -20%;
+                        left: -15%;
+                        opacity: 0.25;
+                    "
+                ></div>
+            </section>
+
+            <!-- ─── FINALE ────────────────────────────────────────── -->
+            <section class="finale" id="finale" data-scene="finale">
+                <div class="finale__bg-glow" aria-hidden="true"></div>
+
+                <div class="finale__inner">
+                    <span class="finale__heart" aria-hidden="true">♡</span>
+                    <h2 class="finale__quote t-hero glow-text">
+                        Every timeline leads me back to you.
+                    </h2>
+                    <p class="finale__sub t-label" style="margin-top: 40px">
+                        The end is just another beginning
+                    </p>
+
+                    <div style="margin-top: 60px">
+                        <a
+                            href="#hero"
+                            class="btn btn-primary pulse-glow"
+                            data-magnetic
+                        >
+                            Begin Again ♡
+                        </a>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- ─── FOOTER ────────────────────────────────────────────── -->
+        <footer>
+            <p>
+                made with devotion &amp; too many sleepless nights &nbsp;·&nbsp;
+                Niki. ♡
+            </p>
+        </footer>
+
+        <!-- ════════════════════════════════════════════════════════
+       SCRIPTS
+       ════════════════════════════════════════════════════════ -->
+
+        <!-- CDN Libraries -->
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/TextPlugin.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/CustomEase.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/@studio-freight/lenis@1.0.42/dist/lenis.min.js"></script>
+
+        <!-- Core -->
+        <script src="js/data-loader.js"></script>
+        <script src="js/core/config.js"></script>
+        <script src="js/core/state.js"></script>
+        <script src="js/core/app-controller.js"></script>
+
+        <!-- Systems -->
+        <script src="js/systems/performance.js"></script>
+        <script src="js/systems/galaxy-background.js"></script>
+        <script src="js/systems/three-background.js"></script>
+        <script src="js/systems/passcode.js"></script>
+        <script src="js/systems/preloader.js"></script>
+        <script src="js/systems/audio-system.js"></script>
+
+        <!-- Engine -->
+        <script src="js/engine/animation-engine.js"></script>
+        <script src="js/engine/scene-manager.js"></script>
+        <script src="js/engine/interaction-engine.js"></script>
+
+        <!-- Main -->
+        <script src="js/main/script.js"></script>
+    </body>
+</html>
